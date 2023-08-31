@@ -37,6 +37,18 @@ func (a *TransactionService) Transfer(from string, to string, amount float64) (s
 	}
 	defer session.EndSession(context.Background())
 
+	filter := bson.M{"cus_id": from}
+
+   var account *models.Account
+
+    err1 := a.CustomerCollection.FindOne(context.Background(), filter).Decode(&account)
+    if err1 != nil {
+        return "error", err1
+    }
+	
+	if account.Balance > amount{
+
+
 	_, err = session.WithTransaction(context.Background(), func(ctx mongo.SessionContext) (interface{}, error) {
 		_, err := a.CustomerCollection.UpdateOne(context.Background(),
 			bson.M{"cus_id": from},
@@ -69,6 +81,8 @@ func (a *TransactionService) Transfer(from string, to string, amount float64) (s
 	})
 	if err != nil {
 		return "failed", err
+	}}else{
+		return "Insufficent balance",nil
 	}
 	return "success", nil
 }
